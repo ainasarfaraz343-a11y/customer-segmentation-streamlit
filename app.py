@@ -6,7 +6,9 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
 
+# --------------------------------------------------------
 # 1. Page Configuration & Setup
+# --------------------------------------------------------
 st.set_page_config(
     page_title="Customer Segmentation Engine",
     layout="wide"
@@ -16,7 +18,9 @@ st.title("Real-Time Customer Profiling Engine")
 st.write("This application models customer segmentation using K-Means clustering over baseline benchmarks.")
 st.markdown("---")
 
+# --------------------------------------------------------
 # 2. Automated Safe Data Loading
+# --------------------------------------------------------
 try:
     df = pd.read_csv('Mall_Customers.csv')
 except Exception:
@@ -32,14 +36,10 @@ X = df[['Annual Income (k$)', 'Spending Score (1-100)']]
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-# 3. Sidebar Control Panel
-st.sidebar.header("Executive Control Panel")
-st.sidebar.write("Configure model hyperparameters and run live predictive simulation paths below:")
-
-st.sidebar.markdown("---")
-st.sidebar.subheader("Algorithm Hyperparameters")
+# --------------------------------------------------------
+# 3. K-Means Pipeline & Mapping Execution
+# --------------------------------------------------------
 num_clusters = 5
-st.sidebar.info("Model calibrated to optimal K=5 for strategic profile mapping.")
 
 # Fit K-Means algorithm using 5 strategic clusters
 kmeans = KMeans(n_clusters=num_clusters, init='k-means++', random_state=42)
@@ -66,27 +66,11 @@ for idx, row in centroids.iterrows():
         cluster_mapping[idx] = "Standard Buyers (Middle Class)"
 
 df['Customer Segment'] = df['Cluster_ID'].map(cluster_mapping)
-
 sil_score = silhouette_score(X_scaled, y_kmeans)
 
-# Real-Time What-If Live Simulator Component
-st.sidebar.markdown("---")
-st.sidebar.subheader("Live Customer Input")
-st.sidebar.write("Enter profile specs for an incoming prospect to predict their cluster mapping:")
-
-input_income = st.sidebar.slider("Annual Income (k$):", int(df['Annual Income (k$)'].min()), int(df['Annual Income (k$)'].max()), 60)
-input_spending = st.sidebar.slider("Spending Score (1-100):", int(df['Spending Score (1-100)'].min()), int(df['Spending Score (1-100)'].max()), 50)
-
-# Process individual live input instance
-simulated_vector = np.array([[input_income, input_spending]])
-simulated_scaled = scaler.transform(simulated_vector)
-predicted_cluster_id = kmeans.predict(simulated_scaled)
-predicted_profile = cluster_mapping[predicted_cluster_id]
-
-# Display dynamic real-time target routing classification box
-st.sidebar.success(f"Prediction Result: {predicted_profile}")
-
-# 4. Main Dashboard Output Layout
+# --------------------------------------------------------
+# 4. Main Dashboard Output Layout (KPI Metrics)
+# --------------------------------------------------------
 metric_col1, metric_col2, metric_col3 = st.columns(3)
 metric_col1.metric(label="Active Algorithm Cluster Count", value=f"{num_clusters} Strategy Groups")
 metric_col2.metric(label="Model Accuracy Silhouette Score", value=f"{sil_score:.4f}")
@@ -94,7 +78,33 @@ metric_col3.metric(label="Total Modeled Customer Rows", value=f"{len(df)} Record
 
 st.markdown("---")
 
-# Middle Row: Dual Plot Layout Configurations
+# --------------------------------------------------------
+# 5. Live Customer Input Section (Moved into the Middle)
+# --------------------------------------------------------
+st.subheader("Live Customer Profiling Input")
+st.write("Adjust the sliders below to see which segment a new client matches in real time:")
+
+col_input1, col_input2 = st.columns(2)
+
+with col_input1:
+    input_income = st.slider("Annual Income (k$):", int(df['Annual Income (k$)'].min()), int(df['Annual Income (k$)'].max()), 60)
+
+with col_input2:
+    input_spending = st.slider("Spending Score (1-100):", int(df['Spending Score (1-100)'].min()), int(df['Spending Score (1-100)'].max()), 50)
+
+# Process individual live input instance safely with array extraction [0]
+simulated_vector = np.array([[input_income, input_spending]])
+simulated_scaled = scaler.transform(simulated_vector)
+predicted_cluster_id = kmeans.predict(simulated_scaled)[0]  # FIXED: Extracted integer to avoid index mapping error
+predicted_profile = cluster_mapping[predicted_cluster_id]
+
+# Show the clean text result right under the sliders
+st.info(f"Prediction Result Analysis: The user belongs to the **{predicted_profile}** segment.")
+st.markdown("---")
+
+# --------------------------------------------------------
+# 6. Visualization & Dual Plot Window Configurations
+# --------------------------------------------------------
 plot_col1, plot_col2 = st.columns(2)
 
 with plot_col1:
