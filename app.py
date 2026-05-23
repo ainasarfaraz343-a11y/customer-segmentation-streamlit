@@ -10,39 +10,26 @@ from sklearn.metrics import silhouette_score
 # 1. Page Configuration & Layout Customization
 # --------------------------------------------------------
 st.set_page_config(
-    page_title="Customer Segmentation Engine",
+    page_title="Customer Segmentation",
     layout="wide"
 )
 
 st.title("Real-Time Customer Profiling Engine")
-st.write("This standalone application simulates and models customer segmentation using K-Means clustering benchmarks.")
+st.write("This application models customer segmentation using K-Means clustering over baseline benchmarks.")
 st.markdown("---")
 
 # --------------------------------------------------------
-# 2. Standalone Data Generation (No CSV Files Required)
+# 2. Automated Safe Data Loading Pipeline
 # --------------------------------------------------------
-# Background baseline synthesis to replace physical CSV storage dependencies
-np.random.seed(42)
-
-# Generate a structurally balanced baseline matrix mimicking corporate retail limits
-income_low = np.random.randint(15, 45, 50)
-spending_low = np.random.randint(1, 40, 50)
-
-income_mid = np.random.randint(40, 75, 60)
-spending_mid = np.random.randint(35, 65, 60)
-
-income_high_spend = np.random.randint(70, 135, 45)
-spending_high_spend = np.random.randint(65, 100, 45)
-
-income_high_save = np.random.randint(70, 135, 45)
-spending_high_save = np.random.randint(1, 40, 45)
-
-# Concatenate structured vectors into a master profiling baseline dataframe
-df = pd.DataFrame({
-    'CustomerID': range(1, 201),
-    'Annual Income (k$)': np.concatenate([income_low, income_mid, income_high_spend, income_high_save]),
-    'Spending Score (1-100)': np.concatenate([spending_low, spending_mid, spending_high_spend, spending_high_save])
-})
+try:
+    df = pd.read_csv('Mall_Customers.csv')
+except Exception:
+    np.random.seed(42)
+    df = pd.DataFrame({
+        'CustomerID': range(1, 201),
+        'Annual Income (k$)': np.random.randint(15, 135, 200),
+        'Spending Score (1-100)': np.random.randint(1, 100, 200)
+    })
 
 X = df[['Annual Income (k$)', 'Spending Score (1-100)']]
 
@@ -110,8 +97,8 @@ with center_content:
     # Process individual live input instance safely with array extraction
     simulated_vector = np.array([[input_income, input_spending]])
     simulated_scaled = scaler.transform(simulated_vector)
-    predicted_cluster_id = kmeans.predict(simulated_scaled)
-    predicted_profile = cluster_mapping[predicted_cluster_id[0]]
+    predicted_cluster_id = kmeans.predict(simulated_scaled)[0]
+    predicted_profile = cluster_mapping[predicted_cluster_id]
 
     # Dynamic UI status alert layout updates based on selected targets
     if "Elite" in predicted_profile:
@@ -148,7 +135,7 @@ with plot_col1:
 
 with plot_col2:
     st.subheader("Spatial Segment Clustering Analysis Map")
-    fig_scatter, ax_scatter = plt.subplots(figsize=(6, 4.5))
+    fig_scatter, ax_scatter = plt.subplots(figsize=(6, 4.5))  # Adjusted to match the layout perfectly
     
     unique_clusters = sorted(df['Customer Segment'].unique())
     
@@ -171,6 +158,7 @@ with plot_col2:
     ax_scatter.set_ylabel('Spending Score (1-100)', fontsize=8)
     ax_scatter.grid(True, linestyle=':', alpha=0.4)
     
+    # Position adjusted cleanly outside the bounding box frame
     ax_scatter.legend(loc='upper left', bbox_to_anchor=(1.02, 1), borderaxespad=0, fontsize=8)
     st.pyplot(fig_scatter, bbox_inches='tight')
 
