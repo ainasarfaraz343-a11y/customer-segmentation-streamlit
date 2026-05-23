@@ -10,7 +10,7 @@ from sklearn.metrics import silhouette_score
 # 1. Page Configuration & Setup
 # --------------------------------------------------------
 st.set_page_config(
-    page_title="Customer Segmentation Engine",
+    page_title="Customer Segmentation",
     layout="wide"
 )
 
