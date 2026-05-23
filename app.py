@@ -22,7 +22,6 @@ if uploaded_file is not None:
     st.subheader("Dataset Preview")
     st.dataframe(df.head())
     
-    # Map categorical Gender variable to binary integers (0 and 1) in the background
     if 'Gender' in df.columns:
         df['Gender_Mapped'] = df['Gender'].map({'Male': 0, 'Female': 1})
         
@@ -33,7 +32,7 @@ if uploaded_file is not None:
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     
-    # Step 4: Implement the Elbow Method Section to find the optimal number of clusters
+    # Step 4: Implement the Elbow Method Section
     st.subheader("1. Elbow Method")
     wcss = []
     for i in range(1, 11):
@@ -41,7 +40,6 @@ if uploaded_file is not None:
         kmeans.fit(X_scaled)
         wcss.append(kmeans.inertia_)
         
-    # Generate and display the Elbow Method line chart inside the Streamlit app
     fig_elbow, ax_elbow = plt.subplots()
     ax_elbow.plot(range(1, 11), wcss, marker='o', color='b')
     ax_elbow.set_title('Elbow Method')
@@ -62,6 +60,24 @@ if uploaded_file is not None:
     score = silhouette_score(X_scaled, y_kmeans)
     st.metric(label="Silhouette Score", value=f"{score:.4f}")
     
+    # NEW FEATURE: Sidebar Inputs for Live Single Customer Prediction
+    st.sidebar.header("Single Customer Prediction")
+    st.sidebar.write("Move the sliders to see which cluster a new customer belongs to:")
+    
+    # Creating individual inputs for dynamic user prediction
+    input_income = st.sidebar.slider("Annual Income (k$):", int(df['Annual Income (k$)'].min()), int(df['Annual Income (k$)'].max()), 50)
+    input_spending = st.sidebar.slider("Spending Score (1-100):", int(df['Spending Score (1-100)'].min()), int(df['Spending Score (1-100)'].max()), 50)
+    
+    # Transform inputs using the same scaler applied to training dataset
+    user_data = np.array([[input_income, input_spending]])
+    user_data_scaled = scaler.transform(user_data)
+    
+    # Predict the target cluster ID for the new customer profile
+    predicted_cluster = kmeans.predict(user_data_scaled)[0]
+    
+    # Display the real-time prediction outcome on the sidebar panel
+    st.sidebar.success(f"This customer belongs to **Cluster {predicted_cluster}**")
+    
     # Step 6: Generate and render the final Customer Segmentation Scatter Plot
     st.subheader("3. Customer Segments Visualization")
     fig_scatter, ax_scatter = plt.subplots(figsize=(10, 6))
@@ -69,13 +85,17 @@ if uploaded_file is not None:
         df['Annual Income (k$)'], df['Spending Score (1-100)'],
         c=df['Cluster'], cmap='rainbow', s=100, edgecolor='black'
     )
+    # Highlight the newly predicted user input position inside the global graph map
+    ax_scatter.scatter(input_income, input_spending, c='black', marker='X', s=300, label='New Customer Input')
+    
     ax_scatter.set_xlabel('Annual Income (k$)')
     ax_scatter.set_ylabel('Spending Score (1-100)')
     plt.colorbar(scatter, ax=ax_scatter, label='Cluster ID')
+    plt.legend()
     st.pyplot(fig_scatter)
     
     # Step 7: Display mathematical summary profiles (mean values) for each group
-    st.subheader("4. Clusters Mean Profiles")
+    st.subheader("📈 4. Clusters Mean Profiles")
     st.dataframe(df.groupby('Cluster')[['Annual Income (k$)', 'Spending Score (1-100)']].mean())
 else:
     # Fallback message shown when the application is waiting for a data upload
