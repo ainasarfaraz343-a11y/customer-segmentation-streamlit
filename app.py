@@ -6,27 +6,17 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
 
-# 1. Page Configuration & Professional Theme Setup
+# 1. Page Configuration & Setup
 st.set_page_config(
-    page_title="AI Customer Profiling Engine",
-    page_icon="🎯",
+    page_title="Customer Segmentation Engine",
     layout="wide"
 )
 
-# Apply sleek executive look using CSS injection
-st.markdown("""
-    <style>
-    .main { background-color: #fcfcfc; }
-    .stMetric { background-color: #ffffff; padding: 18px; border-radius: 12px; border: 1px solid #eef2f5; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-    h1 { color: #1e293b; font-family: 'Helvetica Neue', sans-serif; }
-    </style>
-""", unsafe_allowed_html=True)
-
-st.title("Real-Time AI Customer Profiling Engine")
-st.markdown("This production application models customer segmentation using K-Means clustering over corporate benchmarks.")
+st.title("Real-Time Customer Profiling Engine")
+st.write("This application models customer segmentation using K-Means clustering over baseline benchmarks.")
 st.markdown("---")
 
-# 2. Automated Safe Data Loading 
+# 2. Automated Safe Data Loading
 try:
     df = pd.read_csv('Mall_Customers.csv')
 except Exception:
@@ -42,13 +32,12 @@ X = df[['Annual Income (k$)', 'Spending Score (1-100)']]
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-# 3. Dynamic Sidebar Control Panel
+# 3. Sidebar Control Panel
 st.sidebar.header("Executive Control Panel")
 st.sidebar.write("Configure model hyperparameters and run live predictive simulation paths below:")
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("Algorithm Hyperparameters")
-# We fix K=5 as standard for professional profile naming to map correctly
 num_clusters = 5
 st.sidebar.info("Model calibrated to optimal K=5 for strategic profile mapping.")
 
@@ -58,7 +47,6 @@ y_kmeans = kmeans.fit_predict(X_scaled)
 df['Cluster_ID'] = y_kmeans
 
 # Map Cluster IDs to Real Business Profiles dynamically based on centroids
-# Grouping matching pattern mapping profiles
 cluster_mapping = {}
 centroids = df.groupby('Cluster_ID')[['Annual Income (k$)', 'Spending Score (1-100)']].mean()
 
@@ -67,20 +55,18 @@ for idx, row in centroids.iterrows():
     spnd = row['Spending Score (1-100)']
     
     if inc > 65 and spnd > 65:
-        cluster_mapping[idx] = " Elite Spenders (High Income, High Spend)"
+        cluster_mapping[idx] = "Elite Spenders (High Income, High Spend)"
     elif inc > 65 and spnd <= 65:
-        cluster_mapping[idx] = " Careful Buyers (High Income, Low Spend)"
+        cluster_mapping[idx] = "Careful Buyers (High Income, Low Spend)"
     elif inc <= 65 and spnd > 65:
-        cluster_mapping[idx] = " Impulsive Shoppers (Low Income, High Spend)"
+        cluster_mapping[idx] = "Impulsive Shoppers (Low Income, High Spend)"
     elif inc <= 40 and spnd <= 40:
-        cluster_mapping[idx] = " Bargain Hunters (Low Income, Low Spend)"
+        cluster_mapping[idx] = "Bargain Hunters (Low Income, Low Spend)"
     else:
-        cluster_mapping[idx] = " Standard Buyers (Middle Class)"
+        cluster_mapping[idx] = "Standard Buyers (Middle Class)"
 
-# Apply human-readable profile tags to the dataframe
 df['Customer Segment'] = df['Cluster_ID'].map(cluster_mapping)
 
-# Calculate structural vector validation metric
 sil_score = silhouette_score(X_scaled, y_kmeans)
 
 # Real-Time What-If Live Simulator Component
@@ -94,11 +80,11 @@ input_spending = st.sidebar.slider("Spending Score (1-100):", int(df['Spending S
 # Process individual live input instance
 simulated_vector = np.array([[input_income, input_spending]])
 simulated_scaled = scaler.transform(simulated_vector)
-predicted_cluster_id = kmeans.predict(simulated_scaled)[0]
+predicted_cluster_id = kmeans.predict(simulated_scaled)
 predicted_profile = cluster_mapping[predicted_cluster_id]
 
-# Display dynamic real-time target routing classification box with full description
-st.sidebar.success(f"Prediction Result:\n\n**{predicted_profile}**")
+# Display dynamic real-time target routing classification box
+st.sidebar.success(f"Prediction Result: {predicted_profile}")
 
 # 4. Main Dashboard Output Layout
 metric_col1, metric_col2, metric_col3 = st.columns(3)
@@ -133,18 +119,16 @@ with plot_col2:
     st.subheader("Spatial Segment Clustering Visualization Plot")
     fig_scatter, ax_scatter = plt.subplots(figsize=(6, 4))
     
-    # Map spatial data markers cleanly across clusters
     unique_clusters = df['Customer Segment'].unique()
-    colors = plt.cm.get_cmap('Set1', len(unique_clusters))
     
-    for i, segment in enumerate(unique_clusters):
+    for segment in unique_clusters:
         segmented_data = df[df['Customer Segment'] == segment]
         ax_scatter.scatter(
             segmented_data['Annual Income (k$)'], segmented_data['Spending Score (1-100)'],
             label=segment, s=60, alpha=0.8
         )
     
-    # Overlay the simulated user vector visually on map as a massive black crosshair
+    # Overlay the simulated user vector visually on map
     ax_scatter.scatter(
         input_income, input_spending, 
         c='#0f172a', marker='X', s=350, 
@@ -156,12 +140,12 @@ with plot_col2:
     ax_scatter.set_xlabel('Annual Income (k$)', fontsize=8)
     ax_scatter.set_ylabel('Spending Score (1-100)', fontsize=8)
     ax_scatter.grid(True, linestyle=':', alpha=0.4)
-    ax_scatter.legend(loc='upper right', fontsize=7, bbox_to_anchor=(1.15, 1.15))
+    ax_scatter.legend(loc='upper right', fontsize=7)
     st.pyplot(fig_scatter)
 
 st.markdown("---")
 
-# Lower Row: Datatable Profile Summary Matrix Breakdown with human names
+# Lower Row: Datatable Profile Summary Matrix Breakdown
 st.subheader("Segment Cluster Centroids & Operational Profiling Descriptions")
 cluster_profiles = df.groupby('Customer Segment')[['Annual Income (k$)', 'Spending Score (1-100)']].mean()
 st.dataframe(cluster_profiles, use_container_width=True)
